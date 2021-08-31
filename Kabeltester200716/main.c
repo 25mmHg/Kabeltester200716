@@ -2,7 +2,7 @@
  * Kabeltester191026.c
  * LFUSE=0xFF
  * HFUSE=0xD9
- * Created: 17.07.2020 18:44:35
+ * Created: 31.08.2021 19:26:35
  * Author : 25mmHg / STLEU
  */ 
 
@@ -50,11 +50,6 @@
                            NOTE: CICUIT SCHEME WITHOUT POWER AND XTAL 16MHz
 */
 
-/*
- * TO DO List
- * error() erzeugt nur Sound, Einfluss auf Programmablauf?
- * Englisches oder Deutsches UI 
- */
 
 #define F_CPU 16000000UL
 #define USART_BAUDRATE 38400UL
@@ -164,36 +159,36 @@ void usart_TX_hex(uint16_t payload)
 
 void usart_TX_dec(uint16_t payload)
 {
-	//DISPLAY NUMBERS THE HARD WAY!
 	//CONVERT UNSIGNED INTEGER 2 DECIMAL NUMBERS AND SHOW IT IN 5 DIGITS
-	uint8_t n = 4; //Anzahl der Nullen (Dezimalstellen -1)
-	uint32_t temp = payload;
-	char null = ' '; //autospace vor 1.Ziffer
-	while(n--)
+	uint8_t digits = 5; //Anzahl der Dezimalstellen
+	char null = ' ';    //autospace vor 1.Ziffer
+	while(digits)
 	{
-		// DIV 16,8,4,2
-		temp >>= n;
-		uint8_t m = n;
-		while(m--)
+		digits--;
+		uint32_t x = payload;
+		uint8_t m = digits;
+		while(m)
 		{
-			// DIV 625, 125, 25, 5 
-			temp++;
-			temp *=  0x333U;
-			temp >>= 12;
+			m--;
+			//FULL UNSIGNED INTEGER DIV BY 10 
+			x = ((x+1)*0x3333)>>17;
 		}
-		m = n;
-		if(!temp && n)
+		if(!x && digits)
 		{
 			usart_TX_char(null);
 		}
 		else
 		{
-			usart_TX_char(temp + '0');
+			usart_TX_char(x + '0');
 			null = '0';
 		}
-		// * 10k, 1k, 100, 10
-		while(m--) temp *= 10;
-		temp = payload - temp;
+		m = digits;
+		while(m)
+		{
+			m--;
+			x *= 10;
+		}
+		payload = payload - x;
 	}
 }
 
@@ -464,7 +459,7 @@ int main(void)
 	usart_TX_string("\n");
 	usart_TX_string("************************************\n");
 	usart_TX_string("***WIRING*COMPARATOR*FOR*28*NODES***\n");
-	usart_TX_string("*********VERSION*2020/07/17*********\n");
+	usart_TX_string("*********VERSION*2021/08/31*********\n");
 	usart_TX_string("***©EBD-PW-EM*2020*(STLEU,25mmHg)***\n");
 	usart_TX_string("************************************\n\n");
 	usart_TX_string("STARTUP: SERIAL OUT 38,4kBaud 8N1\n");
